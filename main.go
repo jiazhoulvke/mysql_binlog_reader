@@ -26,9 +26,10 @@ func init() {
 	pflag.StringVarP(&readerConfig.Databases, "databases", "", "", "list entries for just these databases. example: foo,bar")
 	pflag.StringVarP(&readerConfig.Tables, "tables", "t", "", "list entries for just these tables. example: foo,bar")
 	pflag.StringVarP(&readerConfig.OutputFormat, "output-format", "F", "text", "output format. supported format: text,json")
-	pflag.StringVarP(&readerConfig.ExcludeJSONFields, "exclude-json-fields", "", "column_count,pos,row_type,server_id,ts", "exclude json fields")
+	pflag.StringVarP(&readerConfig.ExcludeJSONFields, "exclude-json-fields", "", "column_count,binlog_file,pos,row_type,server_id,ts", "exclude json fields")
 	pflag.StringVarP(&readerConfig.IncludeDataFields, "include-data-fields", "", "", "include data fields. example: id,title")
 	pflag.StringVarP(&readerConfig.ExcludeDataFields, "exclude-data-fields", "", "", "exclude data fields. example: created_at,deleted_at")
+	pflag.BoolVarP(&readerConfig.ShowChangedData, "show-changed-data", "", false, "show changed data in json")
 
 	pflag.StringVarP(&mysqlConfig.Host, "mysql-host", "H", "127.0.0.1", "mysql server host")
 	pflag.IntVarP(&mysqlConfig.Port, "mysql-port", "P", 3306, "mysql server port")

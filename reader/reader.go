@@ -36,6 +36,7 @@ type Config struct {
 	ExcludeJSONFields string
 	IncludeDataFields string
 	ExcludeDataFields string
+	ShowChangedData   bool
 }
 
 type ConfigFunc func(cfg *Config)
@@ -73,7 +74,7 @@ func NewWithConfig(cfg Config) (*Reader, error) {
 	switch cfg.OutputFormat {
 	case "json":
 		r.outputFunc = func(w io.Writer, d Data) {
-			fmt.Fprintln(w, dataToJSON(d, r.excludeJSONFields, r.includeDataFields, r.excludeDataFields))
+			fmt.Fprintln(w, dataToJSON(d, cfg.ShowChangedData, r.excludeJSONFields, r.includeDataFields, r.excludeDataFields))
 		}
 	default:
 		r.outputFunc = func(w io.Writer, d Data) {
@@ -226,6 +227,7 @@ func (r *Reader) OpenBinlog(filename string, offset int64) error {
 			ServerID:    binlogEvent.Header.ServerID,
 			Timestamp:   binlogEvent.Header.Timestamp,
 			Time:        time.Unix(int64(binlogEvent.Header.Timestamp), 0),
+			BinlogFile:  filename,
 			Position:    binlogEvent.Header.LogPos,
 			Database:    string(ev.Table.Schema),
 			Table:       r.TableName(ev.TableID),
@@ -316,12 +318,13 @@ type Data struct {
 	Database    string                 `json:"database"`
 	DataType    DataType               `json:"row_type"`
 	EventType   EventType              `json:"event_type"`
+	BinlogFile  string                 `json:"binlog_file"`
 	Data        map[string]interface{} `json:"data"`
 	OldData     map[string]interface{} `json:"old_data"`
 	ColumnCount uint64                 `json:"column_count"`
 }
 
-func dataToJSON(data Data, excludeJSONFields []string, includeDataFields []string, excludeDataFields []string) string {
+func dataToJSON(data Data, showChangedData bool, excludeJSONFields []string, includeDataFields []string, excludeDataFields []string) string {
 	m := structs.Map(data)
 	if data.DataType != DataTypeUpdate {
 		delete(m, "old_data")
@@ -345,6 +348,15 @@ func dataToJSON(data Data, excludeJSONFields []string, includeDataFields []strin
 	m["data"] = d
 	if data.DataType == DataTypeUpdate {
 		m["old_data"] = od
+	}
+	if data.DataType == DataTypeUpdate && showChangedData {
+		cData := make(map[string]interface{})
+		for k := range data.Data {
+			if fmt.Sprint(data.Data[k]) != fmt.Sprint(data.OldData[k]) {
+				cData[k] = data.Data[k]
+			}
+		}
+		m["changed_data"] = cData
 	}
 	if len(excludeJSONFields) > 0 {
 		for _, k := range excludeJSONFields {
