@@ -10,5 +10,6 @@ require (
 	github.com/pkg/errors v0.8.0 // indirect
 	github.com/siddontang/go-mysql v0.0.0-20200622032841-a8c16ae9a9cb
 	github.com/spf13/pflag v1.0.5
+	golang.org/x/text v0.7.0 // indirect
 	google.golang.org/appengine v1.1.0 // indirect
 )
