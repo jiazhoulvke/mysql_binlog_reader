@@ -13,10 +13,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/blastrain/vitess-sqlparser/sqlparser"
 	"github.com/fatih/structs"
+	"github.com/go-mysql-org/go-mysql/replication"
 	"github.com/jinzhu/copier"
-	"github.com/knocknote/vitess-sqlparser/sqlparser"
-	"github.com/siddontang/go-mysql/replication"
 )
 
 func init() {
@@ -89,10 +89,7 @@ func NewWithConfig(cfg Config) (*Reader, error) {
 		}
 		startTime := uint32(t.Unix())
 		r.AddBinlogEventFilter(func(binlogEvent *replication.BinlogEvent) bool {
-			if binlogEvent.Header.Timestamp < startTime {
-				return false
-			}
-			return true
+			return binlogEvent.Header.Timestamp >= startTime
 		})
 	}
 	if cfg.StopDateTime != "" {
